@@ -1,5 +1,6 @@
 module github.com/GraveSIN/http-probe
 
+
 go 1.23.2
 
 require (
