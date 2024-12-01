@@ -1,8 +1,6 @@
 # http-probe
 A simple and quick URL probing tool (Beta)
 
-> ⚠️ **Beta Status**: This tool is currently in beta phase and might not work as expected.
-
 ## Table of Contents
 - [Features](#features)
 - [Installation](#installation)
@@ -26,6 +24,23 @@ go install github.com/GraveSIN/http-probe@latest
 
 ## Usage
 
+```
+Probe a URL via different HTTP methods
+
+Usage:
+  http-probe [flags]
+
+Flags:
+  -d, --data string     HTTP request body data
+  -f, --file string     File containing URLs (one per line)
+  -h, --help            help for http-probe
+  -X, --method string   HTTP method to use (default: GET) (default "GET")
+  -o, --output string   Output file path
+  -t, --threads int     Number of concurrent threads (default 10)
+  -T, --timeout int     Timeout in seconds for each request (default: 3) (default 3)
+  -u, --url strings     Target URL(s) to probe
+```
+
 ### Input Methods
 1. Via Command Line:
 ```bash
@@ -44,24 +59,6 @@ cat urls.txt | http-probe
 or
 ```bash
 echo "google.com" | http-probe
-```
-
-### Example Usage
-
-1. Probe multiple domains:
-```bash
-http-probe -u "google.com,facebook.com,twitter.com"
-```
-
-2. Probe from a file with mixed URLs and FQDNs:
-```bash
-echo -e "https://google.com\nfacebook.com\nhttp://twitter.com" > urls.txt
-http-probe -f urls.txt
-```
-
-3. Pipeline with other tools:
-```bash
-subfinder -d example.com | http-probe
 ```
 
 ## Default Behavior

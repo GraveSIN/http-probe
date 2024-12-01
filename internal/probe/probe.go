@@ -99,23 +99,20 @@ func createOptimizedClient(config *ProberConfig) *fasthttp.Client {
 		Resolver: &net.Resolver{
 			PreferGo: true,
 			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
-				d := net.Dialer{
-					Timeout: time.Duration(config.Timeout) * time.Second,
-				}
-				return d.DialContext(ctx, "udp", "1.1.1.1:53") // Cloudflare DNS
+				d := net.Dialer{}
+				return d.DialContext(ctx, "udp", "1.1.1.1:53")
 			},
 		},
 	}
 
+	timeout := time.Duration(config.Timeout) * time.Second
 	return &fasthttp.Client{
 		MaxConnsPerHost:               config.Threads * 2,
-		ReadTimeout:                   time.Duration(config.Timeout) * time.Second,
-		WriteTimeout:                  time.Duration(config.Timeout) * time.Second,
 		MaxIdleConnDuration:           time.Second,
 		NoDefaultUserAgentHeader:      true,
 		DisableHeaderNamesNormalizing: true,
 		DisablePathNormalizing:        true,
-		MaxConnWaitTimeout:            time.Second,
+		MaxConnWaitTimeout:            timeout,
 		MaxConnDuration:               time.Minute,
 		MaxIdemponentCallAttempts:     1,
 		MaxResponseBodySize:           10 * 1024 * 1024, // 10MB limit
@@ -208,11 +205,11 @@ func detectContentType(firstByte byte, body string) string {
 
 // makeRequest performs the HTTP request with fallback to HTTP if HTTPS fails
 func (p *Prober) makeRequest(req *fasthttp.Request, resp *fasthttp.Response, url string) error {
-	if err := p.client.Do(req, resp); err != nil {
+	if err := p.client.DoTimeout(req, resp, time.Duration(p.config.Timeout)*time.Second); err != nil {
 		if strings.HasPrefix(url, "https://") {
 			url = "http://" + strings.TrimPrefix(url, "https://")
 			req.SetRequestURI(url)
-			return p.client.Do(req, resp)
+			return p.client.DoTimeout(req, resp, time.Duration(p.config.Timeout))
 		}
 		return err
 	}
@@ -253,7 +250,7 @@ func (p *Prober) determineSupportedMethods(url string) []string {
 	req.SetRequestURI(url)
 	req.Header.SetMethod("OPTIONS")
 
-	if err := p.client.Do(req, resp); err != nil {
+	if err := p.client.DoTimeout(req, resp, time.Duration(p.config.Timeout)); err != nil {
 		return nil
 	}
 
