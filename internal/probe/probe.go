@@ -108,7 +108,8 @@ func createOptimizedClient(config *ProberConfig) *fasthttp.Client {
 	timeout := time.Duration(config.Timeout) * time.Second
 	return &fasthttp.Client{
 		MaxConnsPerHost:               config.Threads * 2,
-		MaxIdleConnDuration:           time.Second,
+		ReadTimeout:                   timeout,
+		MaxIdleConnDuration:           timeout,
 		NoDefaultUserAgentHeader:      true,
 		DisableHeaderNamesNormalizing: true,
 		DisablePathNormalizing:        true,
