@@ -70,5 +70,3 @@ subfinder -d example.com | http-probe
 - Probes supported HTTP methods
 - Probes html title
 - Shows server technology information when available
-
-> Note: This tool is designed for quick recon, and is not as customizable as similar tools
