@@ -49,7 +49,6 @@ var defaultHeaders = map[string]string{
 // ProbeResult represents the result of an HTTP probe containing various response details
 type ProbeResult struct {
 	URL              string
-	SupportedMethods []string
 	StatusLine       string
 	ServerHeader     string
 	RedirectLocation string
@@ -116,7 +115,7 @@ func createOptimizedClient(config *ProberConfig) *fasthttp.Client {
 		MaxConnWaitTimeout:            timeout,
 		MaxConnDuration:               time.Minute,
 		MaxIdemponentCallAttempts:     1,
-		MaxResponseBodySize:           10 * 1024 * 1024, // 10MB limit
+		MaxResponseBodySize:           10 * 1024 * 1024,
 		TLSConfig:                     &tls.Config{InsecureSkipVerify: true},
 		Dial:                          dialer.Dial,
 	}
@@ -209,7 +208,7 @@ func detectContentType(firstByte byte, body string) string {
 func (p *Prober) makeRequest(req *fasthttp.Request, resp *fasthttp.Response, url string) error {
 	if err := p.client.DoTimeout(req, resp, time.Duration(p.config.Timeout)*time.Second); err != nil {
 		if strings.HasPrefix(url, "https://") {
-			url = "http://" + strings.TrimPrefix(url, "https://")
+			url = "http://" + url[8:]
 			req.SetRequestURI(url)
 			return p.client.DoTimeout(req, resp, time.Duration(p.config.Timeout))
 		}
@@ -223,6 +222,11 @@ func (p *Prober) makeRequest(req *fasthttp.Request, resp *fasthttp.Response, url
 func createProbeResult(url string, resp *fasthttp.Response, startTime time.Time, p *Prober) ProbeResult {
 
 	contentType := strings.Split(string(resp.Header.Peek("Content-Type")), ";")[0]
+	contentLength := resp.Header.ContentLength()
+
+	if contentLength == -1 {
+		contentLength = len(resp.Body())
+	}
 
 	return ProbeResult{
 		URL:        url,
@@ -232,8 +236,7 @@ func createProbeResult(url string, resp *fasthttp.Response, startTime time.Time,
 		ContentType:      contentType,
 		RedirectLocation: string(resp.Header.Peek("Location")),
 		Title:            utils.GetHTTPTitleFromBody(resp.Body()),
-		SupportedMethods: p.determineSupportedMethods(url),
-		ContentLength:    resp.Header.ContentLength(),
+		ContentLength:    contentLength,
 		PoweredByHeader:  string(resp.Header.Peek("X-Powered-By")),
 		TimeTaken:        time.Since(startTime),
 	}
@@ -243,30 +246,4 @@ func createProbeResult(url string, resp *fasthttp.Response, startTime time.Time,
 func (p *Prober) waitAndClose() {
 	p.waitGroup.Wait()
 	close(p.results)
-}
-
-// determineSupportedMethods sends an OPTIONS request to discover supported HTTP methods
-func (p *Prober) determineSupportedMethods(url string) []string {
-	req := fasthttp.AcquireRequest()
-	resp := fasthttp.AcquireResponse()
-	defer fasthttp.ReleaseRequest(req)
-	defer fasthttp.ReleaseResponse(resp)
-
-	req.SetRequestURI(url)
-	req.Header.SetMethod("OPTIONS")
-
-	if err := p.client.DoTimeout(req, resp, time.Duration(p.config.Timeout)); err != nil {
-		return nil
-	}
-
-	allow := string(resp.Header.Peek("Allow"))
-	if allow == "" {
-		return nil
-	}
-
-	methods := strings.Split(allow, ",")
-	for i := range methods {
-		methods[i] = strings.TrimSpace(methods[i])
-	}
-	return methods
 }

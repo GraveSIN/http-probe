@@ -11,7 +11,6 @@ A simple and quick URL probing tool (Beta)
 
 ## Features
 - By default, probe for **status code**, **content-length**, **title**, **redirect chain**, **CSP** header, response time, **Server** and **Powered-By** header (to detect CDN & other technologies).
-- By default, Test supported HTTP methods for each URL.
 - Fast to use and efficient.
 - Anti-Feature: not quite customizable, instead designed for quick usage.
 - by default, fallback from https to http.
@@ -64,6 +63,5 @@ echo "google.com" | http-probe
 ## Default Behavior
 - Automatically attempts HTTPS first, falls back to HTTP if unsuccessful
 - Probes redirect locations
-- Probes supported HTTP methods
 - Probes html title
 - Shows server technology information when available

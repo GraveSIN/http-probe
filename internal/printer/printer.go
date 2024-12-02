@@ -65,16 +65,13 @@ func StreamProbeResults(results chan probe.ProbeResult, outputFile string) {
 		}
 
 		if result.ContentType != "" {
-			if result.ContentLength != 0 {
+			if result.ContentLength != -1 {
 				parts = append(parts, fmt.Sprintf("[%s: %d]", result.ContentType, result.ContentLength))
 			} else {
 				parts = append(parts, fmt.Sprintf("[%s]", result.ContentType))
 			}
 		}
 
-		if len(result.SupportedMethods) > 0 {
-			parts = append(parts, fmt.Sprintf("%v", result.SupportedMethods))
-		}
 		if result.ServerHeader != "" {
 			parts = append(parts, result.ServerHeader)
 		}
