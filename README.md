@@ -1,7 +1,7 @@
 # http-probe
 A simple and quick URL probing tool (Beta)
 
-![](https://i.ibb.co/Pzw0391/http-probe.png)
+<img src="https://i.ibb.co/Pzw0391/http-probe.png" width="100%">
 
 ## Table of Contents
 - [Features](#features)
