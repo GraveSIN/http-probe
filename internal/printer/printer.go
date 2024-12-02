@@ -19,7 +19,7 @@ func StreamProbeResults(results chan probe.ProbeResult, outputFile string) {
 		var err error
 		f, err = os.Create(outputFile)
 		if err != nil {
-			log.Fatalf("Failed to create output file: %v", err)
+			log.Fatalf("[+] Failed to create output file: %v", err)
 		}
 		defer f.Close()
 		writer = bufio.NewWriter(f)
