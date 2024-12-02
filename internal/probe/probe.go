@@ -124,10 +124,11 @@ func createOptimizedClient(config *ProberConfig) *fasthttp.Client {
 
 // Start begins the probing process by initializing workers and returning a channel for results
 func (p *Prober) Start() chan ProbeResult {
+	p.waitGroup.Add(p.config.Threads)
+
 	go p.initializeWorkPool()
 
 	for i := 0; i < p.config.Threads; i++ {
-		p.waitGroup.Add(1)
 		go p.worker()
 	}
 
@@ -220,12 +221,15 @@ func (p *Prober) makeRequest(req *fasthttp.Request, resp *fasthttp.Response, url
 // createProbeResult constructs a ProbeResult struct from the HTTP response
 // It extracts information from the response
 func createProbeResult(url string, resp *fasthttp.Response, startTime time.Time, p *Prober) ProbeResult {
+
+	contentType := strings.Split(string(resp.Header.Peek("Content-Type")), ";")[0]
+
 	return ProbeResult{
 		URL:        url,
 		StatusLine: fmt.Sprintf("%d %s", resp.StatusCode(), fasthttp.StatusMessage(resp.StatusCode())),
 
 		ServerHeader:     string(resp.Header.Peek("Server")),
-		ContentType:      string(resp.Header.Peek("Content-Type")),
+		ContentType:      contentType,
 		RedirectLocation: string(resp.Header.Peek("Location")),
 		Title:            utils.GetHTTPTitleFromBody(resp.Body()),
 		SupportedMethods: p.determineSupportedMethods(url),

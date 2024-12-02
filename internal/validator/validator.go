@@ -21,6 +21,7 @@ func ConvertDomainsToURLsAndReturnValidURLs(urlsSlice *[]string) ([]string, erro
 		if len(rawURL) >= 7 { // length of "http://"
 			if rawURL[0] == 'h' && rawURL[1] == 't' && rawURL[2] == 't' && rawURL[3] == 'p' {
 				if rawURL[4] == ':' && rawURL[5] == '/' && rawURL[6] == '/' {
+					rawURL = https + rawURL[7:]
 					hasScheme = true
 				} else if len(rawURL) >= 8 && rawURL[4] == 's' && rawURL[5] == ':' && rawURL[6] == '/' && rawURL[7] == '/' {
 					hasScheme = true

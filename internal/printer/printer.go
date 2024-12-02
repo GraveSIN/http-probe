@@ -12,17 +12,6 @@ import (
 )
 
 func StreamProbeResults(results chan probe.ProbeResult, outputFile string) {
-	// URL              string
-	// SupportedMethods []string
-	// StatusLine       string
-	// ServerHeader     string
-	// RedirectLocation string
-	// Title            string
-	// ContentType      string
-	// ContentLength    int
-	// PoweredByHeader  string
-	// TimeTaken        time.Duration
-
 	var f *os.File
 	var writer *bufio.Writer
 
@@ -74,6 +63,15 @@ func StreamProbeResults(results chan probe.ProbeResult, outputFile string) {
 		if result.Title != "" {
 			parts = append(parts, "["+result.Title+"]")
 		}
+
+		if result.ContentType != "" {
+			if result.ContentLength != 0 {
+				parts = append(parts, fmt.Sprintf("[%s: %d]", result.ContentType, result.ContentLength))
+			} else {
+				parts = append(parts, fmt.Sprintf("[%s]", result.ContentType))
+			}
+		}
+
 		if len(result.SupportedMethods) > 0 {
 			parts = append(parts, fmt.Sprintf("%v", result.SupportedMethods))
 		}
