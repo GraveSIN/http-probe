@@ -8,7 +8,6 @@ A super-fast URL probing tool (Beta)
 - [Installation](#installation)
 - [Usage](#usage)
   - [Input Methods](#input-methods)
-  - [Example Usage](#example-usage)
 - [Default Behavior](#default-behavior)
 
 ## Features
