@@ -1,5 +1,7 @@
 # http-probe
-A simple and quick URL probing tool (Beta)
+A super-fast URL probing tool (Beta)
+
+<img src="https://i.postimg.cc/JhV6HCnJ/http-probe-2.png" width="100%">
 
 ## Table of Contents
 - [Features](#features)
@@ -10,6 +12,7 @@ A simple and quick URL probing tool (Beta)
 - [Default Behavior](#default-behavior)
 
 ## Features
+- Extremely fast.
 - By default, probe for **status code**, **content-length**, **title**, **redirect chain**, **CSP** header, response time, **Server** and **Powered-By** header (to detect CDN & other technologies).
 - Fast to use and efficient.
 - Anti-Feature: not quite customizable, instead designed for quick usage.
