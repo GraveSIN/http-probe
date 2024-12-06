@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/GraveSIN/http-probe/internal/dnsprobe"
 	"github.com/GraveSIN/http-probe/internal/probe"
 	"github.com/fatih/color"
 )
@@ -82,6 +83,54 @@ func StreamProbeResults(results chan probe.ProbeResult, outputFile string) {
 		parts = append(parts, fmt.Sprintf("%dms", result.TimeTaken.Milliseconds()))
 
 		output := fmt.Sprintf("%s\n", strings.Join(parts, " "))
+
+		if outputFile != "" {
+			fmt.Fprint(writer, output)
+		} else {
+			fmt.Print(output)
+		}
+	}
+}
+
+func StreamDNSProbeResults(results chan dnsprobe.DNSProbeResult, outputFile string) {
+	var f *os.File
+	var writer *bufio.Writer
+
+	if outputFile != "" {
+		var err error
+		f, err = os.Create(outputFile)
+		if err != nil {
+			log.Fatalf("[+] Failed to create output file: %v", err)
+		}
+		defer f.Close()
+		writer = bufio.NewWriter(f)
+		defer writer.Flush()
+	}
+
+	for result := range results {
+
+		cyan := color.New(color.FgCyan).SprintFunc()
+		blue := color.New(color.FgBlue).SprintFunc()
+
+		output := fmt.Sprintf("%s:\n", cyan(result.Domain))
+
+		//| MX:\n|   %v\n
+
+		if len(result.ARecords) > 0 {
+			output += fmt.Sprintf("| "+blue("A")+":\n|   %v\n", strings.Join(result.ARecords, "\n|   "))
+		}
+		if len(result.AAAARecords) > 0 {
+			output += fmt.Sprintf("| "+blue("AAAA")+":\n|   %v\n", strings.Join(result.AAAARecords, "\n|   "))
+		}
+		if len(result.NSRecords) > 0 {
+			output += fmt.Sprintf("| "+blue("NS")+":\n|   %v\n", strings.Join(result.NSRecords, "\n|   "))
+		}
+		if len(result.MXRecords) > 0 {
+			output += fmt.Sprintf("| "+blue("MX")+":\n|   %v\n", strings.Join(result.MXRecords, "\n|   "))
+		}
+		if len(result.TXTRecords) > 0 {
+			output += fmt.Sprintf("| "+blue("TXT")+":\n|   %v\n", strings.Join(result.TXTRecords, "\n|   "))
+		}
 
 		if outputFile != "" {
 			fmt.Fprint(writer, output)

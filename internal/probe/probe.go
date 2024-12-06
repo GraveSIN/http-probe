@@ -1,15 +1,19 @@
 package probe
 
 import (
+	"bufio"
 	"context"
 	"crypto/tls"
 	"fmt"
 	"net"
+	"os"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/GraveSIN/http-probe/internal/utils"
+	"github.com/GraveSIN/http-probe/internal/validator"
+	"github.com/spf13/cobra"
 	"github.com/valyala/fasthttp"
 )
 
@@ -67,6 +71,7 @@ type ProberConfig struct {
 	Method     string
 	OutputFile string
 	Body       string
+	DNSMode    bool
 }
 
 // Prober handles the HTTP probing operations
@@ -76,6 +81,67 @@ type Prober struct {
 	results   chan ProbeResult
 	workPool  chan string
 	waitGroup sync.WaitGroup
+}
+
+func ParseHTTPProbeConfig(cmd *cobra.Command) (*ProberConfig, error) {
+	urls, _ := cmd.Flags().GetStringSlice("url")
+	urlFile, _ := cmd.Flags().GetString("file")
+	method, _ := cmd.Flags().GetString("method")
+	threads, _ := cmd.Flags().GetInt("threads")
+	output, _ := cmd.Flags().GetString("output")
+	body, _ := cmd.Flags().GetString("data")
+	timeout, _ := cmd.Flags().GetInt("timeout")
+	dnsMode, _ := cmd.Flags().GetBool("dns")
+
+	// URLs from file
+	if urlFile != "" {
+		urlsFromFile, err := utils.ReadURLsFromFile(urlFile)
+		if err != nil {
+			return nil, err
+		}
+		urls = append(urls, urlsFromFile...)
+	}
+
+	// URLs from stdin
+	if len(urls) == 0 && urlFile == "" {
+		stat, _ := os.Stdin.Stat()
+		if (stat.Mode() & os.ModeCharDevice) == 0 {
+			scanner := bufio.NewScanner(os.Stdin)
+			for scanner.Scan() {
+				if url := scanner.Text(); url != "" {
+					urls = append(urls, url)
+				}
+			}
+		}
+	}
+
+	if len(urls) == 0 {
+		fmt.Println("[!] at least one URL is required via -u, -f, or stdin")
+		os.Exit(1)
+	}
+
+	// validate URLs and return errors
+
+	validURLs, err := validator.ConvertDomainsToURLsAndReturnValidURLs(&urls)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	if len(validURLs) == 0 {
+		fmt.Println("[!] no valid URLs found")
+		os.Exit(1)
+	}
+
+	return &ProberConfig{
+		URLs:       &validURLs,
+		Method:     method,
+		Threads:    threads,
+		OutputFile: output,
+		Body:       body,
+		DNSMode:    dnsMode,
+		Timeout:    int(timeout),
+	}, nil
 }
 
 // NewProber initializes a new Prober instance with the provided configuration
@@ -127,7 +193,7 @@ func (p *Prober) Start() chan ProbeResult {
 
 	go p.initializeWorkPool()
 
-	for i := 0; i < p.config.Threads; i++ {
+	for range p.config.Threads {
 		go p.worker()
 	}
 

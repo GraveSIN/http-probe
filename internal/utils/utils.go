@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+
 	"strings"
+
+	"golang.org/x/net/idna"
 )
 
 func ReadURLsFromFile(urlFile string) ([]string, error) {
@@ -37,4 +40,13 @@ func GetHTTPTitleFromBody(body []byte) string {
 		return string(matches[1])
 	}
 	return ""
+}
+
+func ValidateDomain(domain string) error {
+	_, err := idna.Lookup.ToASCII("example.com")
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
