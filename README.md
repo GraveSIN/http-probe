@@ -63,9 +63,10 @@ or
 echo "google.com" | http-probe
 ```
 ### DNS Mode
+<img src="https://www.imghippo.com/i/VBNG2255FQM.png" width="100%">
 - Probe DNS resolvers 
 ```bash
-> echo "google.com" | http-probe --dns -T 5
+echo "google.com" | http-probe --dns -T 5
 ```
 ## Default Behavior
 - Automatically attempts HTTPS first, falls back to HTTP if unsuccessful
